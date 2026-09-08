@@ -20,13 +20,41 @@ for a complete executable example.
 ## Arrangements and program resources
 
 
-The backend requires a regular
-[`AtomArrangement`][fatqat.emulator.AtomArrangement]. Coordinates are row-major,
-`(column * spacing, row * spacing, 0)`, and the atom model interprets
-spacing in micrometres. A program must declare exactly one dimension-two
-quantum resource per site; declaration order binds resources to coordinates.
-The arrangement describes fixed geometry; it does not track atom loading or
-loss.
+The backend requires an immutable
+[`AtomArrangement`][fatqat.emulator.AtomArrangement] with coordinates in
+micrometres (`distance_unit == "um"`). Use `chain()` or `rectangular()` for a
+regular layout, or `from_coordinates()` to supply explicit sites:
+
+```python
+import fatqat as fq
+
+planar = fq.emulator.AtomArrangement.from_coordinates([(0, 0), (3, 4)])
+spatial = fq.emulator.AtomArrangement.from_coordinates([(0, 0, 0), (3, 4, 5)])
+```
+
+`from_coordinates()` accepts a nonempty ordered iterable. Every coordinate
+must contain two components `(x, y)`, or every coordinate must contain three
+`(x, y, z)`; mixed dimensions are rejected. Components must be finite
+`numbers.Real` values, excluding booleans. Negative coordinates are allowed.
+Strings, mappings, and sets are not accepted as the outer iterable or as
+individual coordinates. Invalid input, including duplicate positions after
+conversion to floats, raises `ValueError`.
+
+`coordinates` contains a copy of the input as immutable `(x, y, z)` tuples,
+with `z=0.0` added to two-component input. Input order defines site indices.
+`spatial_dimension` records the input dimension, so explicit z components
+give `3` even when they are all zero. For arrangements created with
+`from_coordinates()`, `rows`, `cols`, and `spacing` are `None`, even if the
+coordinates form a regular grid.
+
+Regular factories retain their row and column counts and uniform `spacing`.
+Their coordinates are row-major, `(column * spacing, row * spacing, 0)`.
+Their `spatial_dimension` is `2`, including chains embedded in the xy plane.
+Spatial dimension is independent of the atom's number of energy levels.
+
+A program must declare exactly one dimension-two quantum resource per site;
+declaration order binds resources to coordinates. The arrangement describes
+fixed geometry; it does not track atom loading or loss.
 `arrangement.num_sites` and `len(arrangement)` both return the site count,
 which must exactly match the number of quantum resources declared by a pulse
 program.
@@ -186,12 +214,14 @@ complete two-level workflow, see
 ::: fatqat.emulator.AtomArrangement
     options:
       members:
+        - "from_coordinates"
         - "chain"
         - "rectangular"
         - "rows"
         - "cols"
         - "spacing"
         - "coordinates"
+        - "spatial_dimension"
         - "num_sites"
         - "distance_unit"
       inherited_members: true

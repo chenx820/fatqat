@@ -42,6 +42,29 @@ sites in declaration order by default:
 2
 ```
 
+To choose individual positions, supply `(x, y)` coordinates for a 2D layout
+or `(x, y, z)` coordinates for a 3D layout. All sites in an arrangement must
+use the same number of components, and distances are in micrometres:
+
+```pycon
+>>> planar = fq.emulator.AtomArrangement.from_coordinates([(0, 0), (3, 4)])
+>>> planar.coordinates
+((0.0, 0.0, 0.0), (3.0, 4.0, 0.0))
+>>> planar.spatial_dimension
+2
+>>> spatial = fq.emulator.AtomArrangement.from_coordinates([(0, 0, 0), (3, 4, 5)])
+>>> spatial.spatial_dimension
+3
+```
+
+The factory preserves input order as site order and copies the positions
+into immutable tuples. Explicit z values select 3D even when every z value
+is zero. `chain()` and `rectangular()` describe layouts embedded in 2D.
+Custom coordinates have no declared row count, column count, or uniform
+spacing; their `rows`, `cols`, and `spacing` attributes are `None`. See the
+[arrangement API](../api/atom-emulators.md#arrangements-and-program-resources)
+for input constraints.
+
 The arrangement is fixed geometry, not an atom-transport instruction. It sets
 the distances used by Rydberg interactions, and the Program must declare
 exactly one dimension-two resource per site.
