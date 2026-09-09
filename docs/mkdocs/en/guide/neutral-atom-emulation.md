@@ -65,6 +65,29 @@ spacing; their `rows`, `cols`, and `spacing` attributes are `None`. See the
 [arrangement API](../api/atom-emulators.md#arrangements-and-program-resources)
 for input constraints.
 
+You can give rectangular layouts different x and y spacings, then combine
+layouts in the order their sites should appear. Labels let you retrieve the
+site indices belonging to each part:
+
+```pycon
+>>> storage = fq.emulator.AtomArrangement.rectangular(
+...     rows=2, cols=2, spacing=(4.0, 6.0), label="storage"
+... )
+>>> interaction = fq.emulator.AtomArrangement.from_coordinates(
+...     [(12, 0), (12, 6)], label="interaction"
+... )
+>>> combined = fq.emulator.AtomArrangement.combine(storage, interaction)
+>>> combined.group("storage")
+(0, 1, 2, 3)
+>>> combined.group("interaction")
+(4, 5)
+```
+
+Combining layouts requires distinct positions and unique group names. A
+combination containing any 3D layout is 3D. Nested combinations retain their
+groups with indices adjusted to the final site order. You can also give
+`combine()` a label for a group covering the entire result.
+
 The arrangement is fixed geometry, not an atom-transport instruction. It sets
 the distances used by Rydberg interactions, and the Program must declare
 exactly one dimension-two resource per site.

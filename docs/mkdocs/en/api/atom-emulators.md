@@ -47,10 +47,41 @@ give `3` even when they are all zero. For arrangements created with
 `from_coordinates()`, `rows`, `cols`, and `spacing` are `None`, even if the
 coordinates form a regular grid.
 
-Regular factories retain their row and column counts and uniform `spacing`.
-Their coordinates are row-major, `(column * spacing, row * spacing, 0)`.
-Their `spatial_dimension` is `2`, including chains embedded in the xy plane.
-Spatial dimension is independent of the atom's number of energy levels.
+`rectangular()` accepts a positive finite scalar `spacing` for equal spacing
+along both axes, or an ordered iterable of two positive finite real values
+`(x_spacing, y_spacing)` to set each axis separately. Booleans are rejected.
+The `spacing` attribute stores a scalar as a float and a pair as an immutable
+tuple of floats, including when both values are equal. Its coordinates are
+row-major,
+`(column * x_spacing, row * y_spacing, 0)`. Regular factories retain their row
+and column counts. Their `spatial_dimension` is `2`, including chains
+embedded in the xy plane. Spatial dimension is independent of the atom's
+number of energy levels.
+
+Use `AtomArrangement.combine(A, B, C)` to concatenate two or more arrangements
+in argument order, preserving the site order within each input. The result's
+`spatial_dimension` is the largest input dimension, so a combination containing
+any 3D arrangement is 3D. Its `rows`, `cols`, and `spacing` are `None`.
+Overlapping coordinates or fewer than two inputs raise `ValueError`;
+non-arrangement inputs raise `TypeError`.
+
+Every factory, including `combine()`, accepts a keyword-only `label`, default
+`None`, to name all of its sites. A label must be a string containing at least
+one non-whitespace character; it is preserved without stripping spaces.
+The `label` attribute stores that value, and the read-only `groups` mapping
+contains group names and immutable tuples of site indices. `group(label)`
+retrieves one tuple and raises `KeyError` for an unknown name. A combination
+retains all input groups, adjusting their indices to the new site order;
+its own optional label adds a group covering every site. This also preserves
+groups from nested combinations. Invalid labels and duplicate group names
+raise `ValueError`.
+
+For any layout, `row_groups` maps each y coordinate to the site indices in
+that row, and `column_groups` maps each x coordinate to its column's indices.
+Both mappings are read-only, with keys in first-seen coordinate order and
+immutable index tuples in site order. Grouping uses exact equality of the
+stored float coordinates across the entire arrangement. It ignores z, so
+these groups describe the xy projection of a 3D layout.
 
 A program must declare exactly one dimension-two quantum resource per site;
 declaration order binds resources to coordinates. The arrangement describes
@@ -171,7 +202,7 @@ Set `interaction_cutoff` per run through `simulation_config`. The default
 `None` keeps every pair and preserves the complete `C6/R^6` Hamiltonian. A
 finite nonnegative cutoff keeps pairs whose Euclidean distance is at or below
 that value in `arrangement.distance_unit` (currently micrometres); `0.0`
-disables pair interactions. For a rectangular arrangement,
+disables pair interactions. For a rectangular arrangement with scalar spacing,
 `simulation_config={"interaction_cutoff": arrangement.spacing}` keeps only
 horizontal and vertical nearest pairs. This is a numerical Hamiltonian
 truncation, not a physical blockade radius. One emulator can therefore be
@@ -217,6 +248,12 @@ complete two-level workflow, see
         - "from_coordinates"
         - "chain"
         - "rectangular"
+        - "combine"
+        - "group"
+        - "label"
+        - "groups"
+        - "row_groups"
+        - "column_groups"
         - "rows"
         - "cols"
         - "spacing"
